@@ -1,9 +1,4 @@
-//
-//  AppDelegate.swift
-//  Dekhallen
-//
-//  Created by Sampada De on 07/09/18.
-//
+
 
 import UIKit
 
