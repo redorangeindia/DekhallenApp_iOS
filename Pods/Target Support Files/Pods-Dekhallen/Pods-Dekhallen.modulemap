@@ -1,0 +1,6 @@
+framework module Pods_Dekhallen {
+  umbrella header "Pods-Dekhallen-umbrella.h"
+
+  export *
+  module * { export * }
+}
