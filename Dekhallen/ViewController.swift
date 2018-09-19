@@ -47,6 +47,10 @@ class ViewController: UIViewController {
     @IBOutlet weak var scrlView: UIScrollView!
     @IBOutlet weak var txtBilNote: PaddingTextView!
     @IBOutlet weak var btnReportDate: UIButton!
+    @IBOutlet weak var numberBG: UILabel!
+    @IBOutlet weak var nameBG: UILabel!
+    
+    
     //MARK: -
     var tableView = UITableView()
     var headerView = UIView()
@@ -403,8 +407,17 @@ class ViewController: UIViewController {
         view.addSubview(actIndicator)
         
         txtPhoneNUmber.layer.borderWidth = 1.0
-        txtPhoneNUmber.layer.cornerRadius = 5.0
+        txtPhoneNUmber.layer.cornerRadius = 10.0
         txtPhoneNUmber.layer.borderColor = UIColor.clear.cgColor
+
+        nameBG.layer.masksToBounds = true
+        nameBG.layer.cornerRadius = 5.0
+        nameBG.layer.borderColor = UIColor.clear.cgColor
+
+        numberBG.layer.masksToBounds = true
+        numberBG.layer.cornerRadius = 5.0
+        numberBG.layer.borderColor = UIColor.clear.cgColor
+
         
         txtName.layer.borderWidth = 1.0
         txtName.layer.cornerRadius = 5.0
