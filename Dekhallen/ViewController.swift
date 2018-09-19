@@ -407,7 +407,7 @@ class ViewController: UIViewController {
         view.addSubview(actIndicator)
         
         txtPhoneNUmber.layer.borderWidth = 1.0
-        txtPhoneNUmber.layer.cornerRadius = 10.0
+        txtPhoneNUmber.layer.cornerRadius = 5.0
         txtPhoneNUmber.layer.borderColor = UIColor.clear.cgColor
 
         nameBG.layer.masksToBounds = true
