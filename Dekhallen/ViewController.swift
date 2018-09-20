@@ -66,6 +66,8 @@ class ViewController: UIViewController {
     var selectedFields = NSMutableDictionary()
     var actIndicator = UIActivityIndicatorView()
     
+    var timer: Timer?
+
     
     //MARK: -
     override func viewDidLoad() {
@@ -222,12 +224,13 @@ class ViewController: UIViewController {
         selectedFields.setValue(txtDescription.text, forKey: "Description")
         selectedFields.setValue(txtBilNote.text, forKey: "BilNote")
         
-        let list:Array<String> = selectedFields.allKeys as! Array<String>
-        let findList:Array<String> = ["Name","Number","Date"]
-        let listSet = NSSet(array: list)
-        let findListSet = NSSet(array: findList)
+        //Mark:- Commented code adds validation to mandatory fields "Name","Number","Date"
+//        let list:Array<String> = selectedFields.allKeys as! Array<String>
+//        let findList:Array<String> = ["Name","Number","Date"]
+//        let listSet = NSSet(array: list)
+//        let findListSet = NSSet(array: findList)
         
-        if findListSet.isSubset(of: listSet as! Set<AnyHashable>) == true{
+//        if findListSet.isSubset(of: listSet as! Set<AnyHashable>) == true{
             NotificationCenter.default.post(name: NSNotification.Name(rawValue: "disableUI"), object: nil)
             NetworkManager.sharedInstance.postAllData(selectedData: selectedFields, handler:{
                 response in
@@ -239,13 +242,13 @@ class ViewController: UIViewController {
                 self.present(alert, animated: true, completion: nil)
                 
             })
-        }
-        else
-        {
-            let alert = UIAlertController(title: nil, message: "Name, Number and Schedule Date are mandatory", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-            self.present(alert, animated: true, completion: nil)
-        }
+//        }
+//        else
+//        {
+//            let alert = UIAlertController(title: nil, message: "Name, Number and Schedule Date are mandatory", preferredStyle: .alert)
+//            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+//            self.present(alert, animated: true, completion: nil)
+//        }
     }
     
     
@@ -263,8 +266,29 @@ class ViewController: UIViewController {
         return imgArray
     }
     
+    @objc func getTimeOfDate() {
+        let dateFormatter1 = DateFormatter()
+        dateFormatter1.dateStyle = .medium
+        dateFormatter1.timeStyle = .none
+        dateFormatter1.dateFormat = "dd.MM.yyyy hh:mm a"
+        btnReportDate.setTitle(dateFormatter1.string(from: Date()), for: .normal)
+        btnReportDate.setTitleColor(UIColor.black, for: .normal)
+        selectedFields.setValue(dateFormatter1.string(from: Date()), forKey: "systemdateTime")
+
+    }
+    
     func prefillInitialValues() {
         
+        timer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(self.getTimeOfDate), userInfo: nil, repeats: true)
+        
+        let dateFormatter1 = DateFormatter()
+        dateFormatter1.dateStyle = .medium
+        dateFormatter1.timeStyle = .none
+        dateFormatter1.dateFormat = "dd.MM.yyyy hh:mm a"
+        btnReportDate.setTitle(dateFormatter1.string(from: Date()), for: .normal)
+        btnReportDate.setTitleColor(UIColor.black, for: .normal)
+        selectedFields.setValue(dateFormatter1.string(from: Date()), forKey: "systemdateTime")
+
         NetworkManager.sharedInstance.getLevelOne({
             response in
             let responseJSON = JSON(response.result.value!)
@@ -382,7 +406,7 @@ class ViewController: UIViewController {
         
         txtScheduleDate.text = ""
         
-        btnReportDate.setTitle("Assigned To", for: .normal)
+        btnReportDate.setTitle("Reporting Date", for: .normal)
         btnReportDate.setTitleColor(UIColor.lightGray, for: .normal)
         selectedFields.removeAllObjects()
         self.prefillInitialValues()
@@ -884,7 +908,6 @@ extension ViewController: UITextFieldDelegate{
             let responseJSON = JSON(response.result.value!)
             self.objectArray.removeAllObjects()
             self.objectArray.addObjects(from: responseJSON["hallwithavailableSlots"].arrayValue)
-            self.btnLevel_3.setTitle("", for: .normal)
             self.enumAPI = .zgetTimeSlot
             self.showSelectionPopup("Select Time Slot")
         })

@@ -73,7 +73,7 @@ class NetworkManager: NSObject {
                 handler(response)
                 break
             case .failure(_):
-                print(response.result.error!)
+                //print(response.result.error!)
                 break
             }
             NotificationCenter.default.post(name: NSNotification.Name(rawValue: "enableUI"), object: nil)
@@ -169,7 +169,7 @@ class NetworkManager: NSObject {
                 handler(response)
                 break
             case .failure(_):
-                print(response.result.error!)
+                //print(response.result.error!)
                 break
             }
             NotificationCenter.default.post(name: NSNotification.Name(rawValue: "enableUI"), object: nil)
@@ -196,22 +196,25 @@ class NetworkManager: NSObject {
     {
         let params:[String:String] = [
             "billnr": selectedData.value(forKey: "BilNumber") != nil ?(selectedData.value(forKey: "BilNumber") as! String):"0",
-            "name": selectedData.value(forKey: "Name") as! String,
+            "name": selectedData.value(forKey: "Name") != nil ? (selectedData.value(forKey: "Name") as! String):"",
             "sel_users_id": selectedData.value(forKey: "AssignedTo") != nil ?((selectedData["AssignedTo"]) as! JSON)["username"].stringValue:"Ronny",
             "sel_status_id":selectedData.value(forKey: "Status") != nil ?((selectedData["Status"]) as! JSON)["status_name"].stringValue:"REGISTERED" ,
             "levelthreeid": selectedData.value(forKey: "LevelThree") != nil ?((selectedData["LevelThree"]) as! JSON)["id"].stringValue:"0",
             "cus_car_des": selectedData.value(forKey: "Description") != nil ?(selectedData.value(forKey: "Description") as! String):"Description",
             "priorityid": selectedData.value(forKey: "Priority") != nil ?((selectedData["Priority"]) as! JSON)["priority_id"].stringValue:"3",
-            "number": selectedData.value(forKey: "Number") as! String,
+            "number": selectedData.value(forKey: "Number") != nil ? (selectedData.value(forKey: "Number") as! String):"",
             "arsmodid": selectedData.value(forKey: "Year") != nil ?((selectedData["Year"]) as! JSON)["car_year"].stringValue:"0",
             "leveltwoid": selectedData.value(forKey: "LevelTwo") != nil ?((selectedData["LevelTwo"]) as! JSON)["leveltwo_id"].stringValue:"0",
             "leveloneid": selectedData.value(forKey: "LevelOne") != nil ?((selectedData["LevelOne"]) as! JSON)["levelone_id"].stringValue:"21",
             "hallid": selectedData.value(forKey: "Hall") != nil ?((selectedData["Hall"]) as! JSON)["hall_id"].stringValue:"1",
             "billtypeid": selectedData.value(forKey: "CarType") != nil ?((selectedData["CarType"]) as! JSON)["id"].stringValue:"0",
             "slot_id": selectedData.value(forKey: "TimeSlot") != nil ?((selectedData["TimeSlot"]) as! JSON)["id"].stringValue:"1",
-            "time": selectedData.value(forKey: "Date") as! String,
-            "notes": selectedData.value(forKey: "BilNote") != nil ?(selectedData.value(forKey: "BilNote") as! String):"Bil Note"
+            "time": selectedData.value(forKey: "Date") != nil ? (selectedData.value(forKey: "Date") as! String):"",
+            "notes": selectedData.value(forKey: "BilNote") != nil ?(selectedData.value(forKey: "BilNote") as! String):"Bil Note",
+            "systemdateTime":selectedData.value(forKey: "systemdateTime") as! String
         ]
+        
+        print(params)
         
         Alamofire.upload(multipartFormData: { multipartFormData in
             if (selectedData.value(forKey: "Images") != nil)
