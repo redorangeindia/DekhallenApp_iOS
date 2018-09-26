@@ -27,7 +27,7 @@ enum VC_API_CALL
     case zgetTimeSlot
 }
 
-class ViewController: UIViewController {
+class ViewController: UIViewController,UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     //MARK: -
     @IBOutlet weak var txtPhoneNUmber: UITextField!
     @IBOutlet weak var txtName: UITextField!
@@ -49,7 +49,8 @@ class ViewController: UIViewController {
     @IBOutlet weak var btnReportDate: UIButton!
     @IBOutlet weak var numberBG: UILabel!
     @IBOutlet weak var nameBG: UILabel!
-    
+    @IBOutlet weak var btnAddDetails: UIButton!
+    @IBOutlet weak var btnAddImage: UIButton!
     
     //MARK: -
     var tableView = UITableView()
@@ -65,7 +66,8 @@ class ViewController: UIViewController {
     var datePicker : UIDatePicker!
     var selectedFields = NSMutableDictionary()
     var actIndicator = UIActivityIndicatorView()
-    
+    var imagePicker: UIImagePickerController!
+
     var timer: Timer?
 
     
@@ -182,7 +184,8 @@ class ViewController: UIViewController {
             let responseJSON = JSON(response.result.value!)
             self.objectArray.removeAllObjects()
             self.objectArray.addObjects(from: responseJSON["leveltwodata"].arrayValue)
-            self.btnLevel_3.setTitle("", for: .normal)
+            self.btnLevel_3.setTitle("Level III", for: .normal)
+            self.btnLevel_3.setTitleColor(UIColor.lightGray, for: .normal)
             self.enumAPI = .zgetLevel_2_Detail
             self.showSelectionPopup("Select Level II")
         })
@@ -203,21 +206,42 @@ class ViewController: UIViewController {
     }
     
     @IBAction func btnAddImageTapped(_ sender: Any) {
-        let vc = BSImagePickerViewController()
         
-        bs_presentImagePickerController(vc, animated: true,
-                                        select: { (asset: PHAsset) -> Void in
-                                            // User selected an asset.
-                                            // Do something with it, start upload perhaps?
-        }, deselect: { (asset: PHAsset) -> Void in
-            // User deselected an assets.
-            // Do something, cancel upload?
-        }, cancel: { (assets: [PHAsset]) -> Void in
-            // User cancelled. And this where the assets currently selected.
-        }, finish: { (assets: [PHAsset]) -> Void in
-            print(assets.count)
-            self.selectedFields.setValue(self.getAssetThumbnails(assets: assets), forKey: "Images")
-        }, completion: nil)
+        let alert = UIAlertController(title: nil, message: "Choose source for Image", preferredStyle: .alert)
+       
+        alert.addAction(UIAlertAction(title: "Camera",
+                                      style: UIAlertActionStyle.default,
+                                      handler: {(alert: UIAlertAction!) in
+                                        self.present(self.imagePicker, animated: true, completion: nil)
+
+        }))
+        
+        alert.addAction(UIAlertAction(title: "Gallery",
+                                      style: UIAlertActionStyle.default,
+                                      handler: {(alert: UIAlertAction!) in
+
+                                        
+                                        let vc = BSImagePickerViewController()
+                                        
+                                        self.bs_presentImagePickerController(vc, animated: true,
+                                                                        select: { (asset: PHAsset) -> Void in
+                                                                            // User selected an asset.
+                                                                            // Do something with it, start upload perhaps?
+                                        }, deselect: { (asset: PHAsset) -> Void in
+                                            // User deselected an assets.
+                                            // Do something, cancel upload?
+                                        }, cancel: { (assets: [PHAsset]) -> Void in
+                                            // User cancelled. And this where the assets currently selected.
+                                        }, finish: { (assets: [PHAsset]) -> Void in
+                                            print(assets.count)
+                                            self.selectedFields.setValue(self.getAssetThumbnails(assets: assets), forKey: "Images")
+                                        }, completion: nil)
+       
+        }))
+
+        self.present(alert, animated: true, completion: nil)
+
+        
     }
     
     @IBAction func btnAddDetailsTapped(_ sender: Any) {
@@ -231,28 +255,38 @@ class ViewController: UIViewController {
 //        let findListSet = NSSet(array: findList)
         
 //        if findListSet.isSubset(of: listSet as! Set<AnyHashable>) == true{
-            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "disableUI"), object: nil)
-            NetworkManager.sharedInstance.postAllData(selectedData: selectedFields, handler:{
+        
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "disableUI"), object: nil)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            NetworkManager.sharedInstance.postAllData(selectedData: self.selectedFields, handlerResponse:{
                 response in
-                let responseJSON = JSON(response.result.value!)
-                print(responseJSON)
                 self.clearAllFields()
+                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "enableUI"), object: nil)
+
                 let alert = UIAlertController(title: nil, message: "Data added succesfully", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                 self.present(alert, animated: true, completion: nil)
                 
+            }, handlerError: {
+                response in
+                self.clearAllFields()
+                let alert = UIAlertController(title: nil, message: "Failed to add data", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                self.present(alert, animated: true, completion: nil)
+                
             })
-//        }
-//        else
-//        {
-//            let alert = UIAlertController(title: nil, message: "Name, Number and Schedule Date are mandatory", preferredStyle: .alert)
-//            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-//            self.present(alert, animated: true, completion: nil)
-//        }
+        }
     }
     
     
     //MARK: -
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+        let image = info[UIImagePickerControllerOriginalImage] as! UIImage
+        self.selectedFields.setValue([image], forKey: "Images")
+        picker.dismiss(animated: true, completion: nil)
+    }
+    
     func getAssetThumbnails(assets: [PHAsset]) -> [UIImage] {
         let manager = PHImageManager.default()
         let option = PHImageRequestOptions()
@@ -270,25 +304,128 @@ class ViewController: UIViewController {
         let dateFormatter1 = DateFormatter()
         dateFormatter1.dateStyle = .medium
         dateFormatter1.timeStyle = .none
-        dateFormatter1.dateFormat = "dd.MM.yyyy hh:mm a"
+        dateFormatter1.dateFormat = "dd.MM.yyyy HH:mm"
         btnReportDate.setTitle(dateFormatter1.string(from: Date()), for: .normal)
         btnReportDate.setTitleColor(UIColor.black, for: .normal)
         selectedFields.setValue(dateFormatter1.string(from: Date()), forKey: "systemdateTime")
-
     }
     
+    
+    func scheduleDateAndTimeSlot() {
+        let calendar = Calendar.current
+        let now = Date()
+        let eight_today = calendar.date(
+            bySettingHour: 7,
+            minute: 0,
+            second: 0,
+            of: now)!
+        
+        let four_thirty_today = calendar.date(
+            bySettingHour: 17,
+            minute: 0,
+            second: 0,
+            of: now)!
+        
+        
+        if now >= eight_today &&
+            now <= four_thirty_today
+        {
+            let date = Date()
+            let calendar = Calendar.current
+            let hour = calendar.component(.hour, from: date)
+            
+            let dateFormatter1 = DateFormatter()
+            dateFormatter1.dateStyle = .medium
+            dateFormatter1.timeStyle = .none
+            dateFormatter1.dateFormat = "dd.MM.yyyy"
+            selectedFields.setValue(dateFormatter1.string(from: Date()), forKey: "Date")
+
+            
+            NetworkManager.sharedInstance.getHallDetail({
+                response in
+                let responseJSON = JSON(response.result.value!)
+                self.objectArray.removeAllObjects()
+                self.objectArray.addObjects(from: responseJSON["halldetail"].arrayValue)
+                for indexObj in (self.objectArray){
+                    if (indexObj as! JSON)["hall_number"] == "1"{
+                        self.btnHall.setTitle((indexObj as! JSON)["hall_number"].stringValue, for: .normal)
+                        self.btnHall.tag = Int((indexObj as! JSON)["hall_id"].stringValue)!
+                        self.btnHall.setTitleColor(UIColor.black, for: .normal)
+                        self.selectedFields.setValue((indexObj as! JSON), forKey: "Hall")
+                        break
+                    }
+                }
+                NetworkManager.sharedInstance.getSlotForSelectedDate(date: self.selectedFields.value(forKey: "Date") as! String, hallId: (self.selectedFields.value(forKey: "Hall") as! JSON)["hall_id"].stringValue, handler: {
+                    response in
+                    let responseJSON = JSON(response.result.value!)
+                    var nextSlot = 1
+                    for indexObj in (responseJSON["hallwithavailableSlots"].arrayValue){
+                        if Int(((indexObj)["time_slot"].stringValue).components(separatedBy: ":").first!) == hour{
+                            nextSlot = (Int(((indexObj)["time_slot"].stringValue).components(separatedBy: ":").first!)!+1)
+                            break
+                        }
+                    }
+                    for indexObj in (responseJSON["hallwithavailableSlots"].arrayValue){
+                        if Int(((indexObj)["time_slot"].stringValue).components(separatedBy: ":").first!) == nextSlot{
+                            self.txtScheduleDate.text =  self.selectedFields.value(forKey: "Date") as! String + " " + "\((indexObj)["time_slot"])"
+                            self.selectedFields.setValue((indexObj), forKey: "TimeSlot")
+                            break
+                        }
+                    }
+                })
+        })
+        }
+        else
+        {
+            print("Outside range")
+            let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())
+            let dateFormatter1 = DateFormatter()
+            dateFormatter1.dateStyle = .medium
+            dateFormatter1.timeStyle = .none
+            dateFormatter1.dateFormat = "dd.MM.yyyy"
+            
+            selectedFields.setValue(dateFormatter1.string(from: tomorrow!), forKey: "Date")
+            NetworkManager.sharedInstance.getHallDetail({
+                response in
+                let responseJSON = JSON(response.result.value!)
+                self.objectArray.removeAllObjects()
+                self.objectArray.addObjects(from: responseJSON["halldetail"].arrayValue)
+                for indexObj in (self.objectArray){
+                    if (indexObj as! JSON)["hall_number"] == "1"{
+                        self.btnHall.setTitle((indexObj as! JSON)["hall_number"].stringValue, for: .normal)
+                        self.btnHall.tag = Int((indexObj as! JSON)["hall_id"].stringValue)!
+                        self.btnHall.setTitleColor(UIColor.black, for: .normal)
+                        self.selectedFields.setValue((indexObj as! JSON), forKey: "Hall")
+                        break
+                    }
+                }
+
+                NetworkManager.sharedInstance.getSlotForSelectedDate(date: dateFormatter1.string(from: tomorrow!) , hallId: (self.selectedFields.value(forKey: "Hall") as! JSON)["hall_id"].stringValue, handler: {
+                    response in
+                    let responseJSON = JSON(response.result.value!)
+                    
+                    for indexObj in (responseJSON["hallwithavailableSlots"].arrayValue){
+                        
+                        self.txtScheduleDate.text =  dateFormatter1.string(from: tomorrow!) + " " + "\((indexObj)["time_slot"])"
+                        self.selectedFields.setValue((indexObj), forKey: "TimeSlot")
+                        break
+                    }
+                })
+            })
+            
+        }
+    }
+  
+    
+    //Mark:- Prefill values
     func prefillInitialValues() {
         
-        timer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(self.getTimeOfDate), userInfo: nil, repeats: true)
+        imagePicker =  UIImagePickerController()
+        imagePicker.delegate = self
+        imagePicker.sourceType = .camera
         
-        let dateFormatter1 = DateFormatter()
-        dateFormatter1.dateStyle = .medium
-        dateFormatter1.timeStyle = .none
-        dateFormatter1.dateFormat = "dd.MM.yyyy hh:mm a"
-        btnReportDate.setTitle(dateFormatter1.string(from: Date()), for: .normal)
-        btnReportDate.setTitleColor(UIColor.black, for: .normal)
-        selectedFields.setValue(dateFormatter1.string(from: Date()), forKey: "systemdateTime")
-
+        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.getTimeOfDate), userInfo: nil, repeats: true)
+        
         NetworkManager.sharedInstance.getLevelOne({
             response in
             let responseJSON = JSON(response.result.value!)
@@ -301,22 +438,6 @@ class ViewController: UIViewController {
                     self.btnLevel_1.tag = Int((indexObj as! JSON)["levelone_id"].stringValue)!
                     self.btnLevel_1.setTitleColor(UIColor.black, for: .normal)
                     self.selectedFields.setValue((indexObj as! JSON), forKey: "LevelOne")
-                    break
-                }
-            }
-        })
-        
-        NetworkManager.sharedInstance.getHallDetail({
-            response in
-            let responseJSON = JSON(response.result.value!)
-            self.objectArray.removeAllObjects()
-            self.objectArray.addObjects(from: responseJSON["halldetail"].arrayValue)
-            for indexObj in (self.objectArray){
-                if (indexObj as! JSON)["hall_number"] == "1"{
-                    self.btnHall.setTitle((indexObj as! JSON)["hall_number"].stringValue, for: .normal)
-                    self.btnHall.tag = Int((indexObj as! JSON)["hall_id"].stringValue)!
-                    self.btnHall.setTitleColor(UIColor.black, for: .normal)
-                    self.selectedFields.setValue((indexObj as! JSON), forKey: "Hall")
                     break
                 }
             }
@@ -367,6 +488,8 @@ class ViewController: UIViewController {
             }
         })
         
+        self.scheduleDateAndTimeSlot()
+
     }
     
     func clearAllFields() {
@@ -567,6 +690,12 @@ class ViewController: UIViewController {
         else
         {
             self.present(alert, animated: true, completion: nil)
+//            if self.enumAPI == .zgetLevel_2_Detail
+//            {
+//                self.btnLevel_3.setTitle("Level III", for: .normal)
+//                btnLevel_3.setTitleColor(UIColor.lightGray, for: .normal)
+//            }
+
         }
     }
     
@@ -592,6 +721,7 @@ class ViewController: UIViewController {
         actIndicator.stopAnimating()
         print("ui ENABLED")
     }
+    
     @objc func disableUI(notification:NSNotification){
         self.view.isUserInteractionEnabled = false
         self.view.endEditing(true)
@@ -817,7 +947,7 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
             let dateFormatter1 = DateFormatter()
             dateFormatter1.dateStyle = .medium
             dateFormatter1.timeStyle = .none
-            dateFormatter1.dateFormat = "dd.MM.yyyy hh:mm a"
+            dateFormatter1.dateFormat = "dd.MM.yyyy HH:MM"
             btnReportDate.setTitle(dateFormatter1.string(from: datePicker.date), for: .normal)
             btnReportDate.setTitleColor(UIColor.black, for: .normal)
             selectedFields.setValue((objectArray.object(at: indexPath.row) as! JSON), forKey: "TimeSlot")
@@ -839,10 +969,35 @@ extension ViewController: UITextFieldDelegate{
         return true
     }
     
+    func isBillNumberValid(testStr:String) -> Bool {
+        
+        if testStr.count == 5 {
+            let emailRegEx = "[A-Z0-9]+[A-Z0-9]"
+            let phone = testStr.components(separatedBy: CharacterSet.decimalDigits.inverted).joined(separator: "")
+            if phone.count == 2{
+                let emailTest = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
+                return emailTest.evaluate(with: testStr)
+            }
+            else{
+            return false
+            }
+        }
+        return false
+    }
+    
     func textFieldDidEndEditing(_ textField: UITextField) {
         switch textField {
         case txtBillNumber:
-            selectedFields.setValue(txtBillNumber.text, forKey: "BilNumber")
+            if isBillNumberValid(testStr: txtBillNumber.text!){
+                selectedFields.setValue(txtBillNumber.text, forKey: "BilNumber")}
+            else{
+                print("Invalid number")
+                txtBillNumber.text = ""
+                let alert = UIAlertController(title: nil, message: "Invalid Bil Number", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                self.present(alert, animated: true, completion: nil)
+
+            }
             break
         case txtName:
             selectedFields.setValue(txtName.text, forKey: "Name")
@@ -930,3 +1085,20 @@ class PaddingTextView: UITextView, UITextViewDelegate{
 
 
 
+extension Date {
+    var yesterday: Date {
+        return Calendar.current.date(byAdding: .day, value: -1, to: noon)!
+    }
+    var tomorrow: Date {
+        return Calendar.current.date(byAdding: .day, value: 1, to: noon)!
+    }
+    var noon: Date {
+        return Calendar.current.date(bySettingHour: 0, minute: 0, second: 0, of: self)!
+    }
+    var month: Int {
+        return Calendar.current.component(.month,  from: self)
+    }
+    var isLastDayOfMonth: Bool {
+        return tomorrow.month != month
+    }
+}

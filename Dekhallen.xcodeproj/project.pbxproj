@@ -360,13 +360,14 @@
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = T227ZRXCXK;
 				INFOPLIST_FILE = Dekhallen/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.rot.Dekhallen;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "88f40889-5bf2-445b-8ac7-d1b3afbbe9da";
+				PROVISIONING_PROFILE = "a1049991-3221-4171-b4e8-4079ec48e3a1";
 				PROVISIONING_PROFILE_SPECIFIER = DevDekhallen;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -381,13 +382,14 @@
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = T227ZRXCXK;
 				INFOPLIST_FILE = Dekhallen/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.rot.Dekhallen;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "88f40889-5bf2-445b-8ac7-d1b3afbbe9da";
+				PROVISIONING_PROFILE = "a1049991-3221-4171-b4e8-4079ec48e3a1";
 				PROVISIONING_PROFILE_SPECIFIER = DevDekhallen;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

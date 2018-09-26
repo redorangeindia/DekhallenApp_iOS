@@ -29,7 +29,7 @@
                                                 <color key="backgroundColor" red="0.99999600649999998" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="textColor"/>
                                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="18"/>
-                                                <textInputTraits key="textInputTraits"/>
+                                                <textInputTraits key="textInputTraits" autocapitalizationType="allCharacters"/>
                                                 <connections>
                                                     <outlet property="delegate" destination="BYZ-38-t0r" id="tgB-ex-CQ8"/>
                                                 </connections>
@@ -552,6 +552,8 @@
                     <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
                     <size key="freeformSize" width="375" height="1300"/>
                     <connections>
+                        <outlet property="btnAddDetails" destination="zjG-VL-0fP" id="Hwf-id-e7x"/>
+                        <outlet property="btnAddImage" destination="bPJ-3l-c6S" id="QLC-97-qtH"/>
                         <outlet property="btnAssignedTo" destination="bj3-ff-iLy" id="6Jx-we-8Xh"/>
                         <outlet property="btnBillType" destination="eRm-fu-NbK" id="hmb-Ug-5ld"/>
                         <outlet property="btnHall" destination="4WI-qm-ext" id="xUX-Gg-8nf"/>

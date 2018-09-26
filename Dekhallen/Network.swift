@@ -163,6 +163,7 @@ class NetworkManager: NSObject {
     func getSlotForSelectedDate(date: String, hallId: String, handler:@escaping(DataResponse<Any>)->())
     {
         let url = "http://pmrescue.no/pmtasks/Api/gettimeslotbyavailbleHall/\(hallId)/\(date)"
+        print(url)
         Alamofire.request(url, method: .post, parameters: nil, encoding: JSONEncoding.default, headers: nil).responseJSON { (response:DataResponse<Any>) in
             switch(response.result) {
             case .success(_):
@@ -192,13 +193,13 @@ class NetworkManager: NSObject {
         }
     }
     
-    func postAllData(selectedData: NSMutableDictionary, handler:@escaping(DataResponse<Any>) -> ())
+    func postAllData(selectedData: NSMutableDictionary, handlerResponse:@escaping(DataResponse<Any>) -> (), handlerError:@escaping(DataResponse<Any>) -> ())
     {
         let params:[String:String] = [
             "billnr": selectedData.value(forKey: "BilNumber") != nil ?(selectedData.value(forKey: "BilNumber") as! String):"0",
             "name": selectedData.value(forKey: "Name") != nil ? (selectedData.value(forKey: "Name") as! String):"",
-            "sel_users_id": selectedData.value(forKey: "AssignedTo") != nil ?((selectedData["AssignedTo"]) as! JSON)["username"].stringValue:"Ronny",
-            "sel_status_id":selectedData.value(forKey: "Status") != nil ?((selectedData["Status"]) as! JSON)["status_name"].stringValue:"REGISTERED" ,
+            "sel_users_id": selectedData.value(forKey: "AssignedTo") != nil ?((selectedData["AssignedTo"]) as! JSON)["id"].stringValue:"Ronny",
+            "sel_status_id":selectedData.value(forKey: "Status") != nil ?((selectedData["Status"]) as! JSON)["status_id"].stringValue:"REGISTERED" ,
             "levelthreeid": selectedData.value(forKey: "LevelThree") != nil ?((selectedData["LevelThree"]) as! JSON)["id"].stringValue:"0",
             "cus_car_des": selectedData.value(forKey: "Description") != nil ?(selectedData.value(forKey: "Description") as! String):"Description",
             "priorityid": selectedData.value(forKey: "Priority") != nil ?((selectedData["Priority"]) as! JSON)["priority_id"].stringValue:"3",
@@ -216,33 +217,41 @@ class NetworkManager: NSObject {
         
         print(params)
         
-        Alamofire.upload(multipartFormData: { multipartFormData in
+        let url = "http://pmrescue.no/pmtasks/Api/insertcustomerdetailiPhone" /* your API url */
+        
+        let headers: HTTPHeaders = [
+            "Content-type": "multipart/form-data"
+        ]
+        
+        Alamofire.upload(multipartFormData: { (multipartFormData) in
             if (selectedData.value(forKey: "Images") != nil)
             {
-            for (index,imgObj) in (selectedData.value(forKey: "Images") as! Array<Any>).enumerated()
-            {
-                let imgData = UIImageJPEGRepresentation(imgObj as! UIImage, 0.2)!
-                multipartFormData.append(imgData, withName: "workshop_user_images_"+"\(index)", fileName: self.randomString(length: 3), mimeType: "image/jpg")
+                for (index,imgObj) in (selectedData.value(forKey: "Images") as! Array<Any>).enumerated()
+                {
+                    let imgData = UIImageJPEGRepresentation(imgObj as! UIImage, 0.2)!
+                    multipartFormData.append(imgData, withName: "workshop_user_images_"+"\(index)", fileName: self.randomString(length: 3), mimeType: "image/jpg")
                 }}
             for (key, value) in params {
                 multipartFormData.append(value.data(using: String.Encoding.utf8)!, withName: key)
             }
-        },
-                         to:"http://pmrescue.no/pmtasks/Api/insertcustomerdetailiPhone")
-        { (result) in
-            switch result {
+            
+        }, usingThreshold: UInt64.init(), to: url, method: .post, headers: headers) { (result) in
+            switch result{
             case .success(let upload, _, _):
                 upload.responseJSON { response in
-                    print(response.result.value as Any)
-                    handler(response)
+                    print("Success")
+                    print(upload.responseJSON)
+                    handlerResponse(response)
                 }
-            case .failure(let encodingError):
-                print(encodingError)
+            case .failure(let error):
+                print("Error in upload: \(error.localizedDescription)")
+                handlerError(error as! DataResponse<Any>)
+                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "enableUI"), object: nil)
             }
-            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "enableUI"), object: nil)
+            
         }
+        
     }
-    
     
     
     func randomString(length: Int) -> String {
